@@ -12,7 +12,7 @@ void TIM1_UP_TIM10_IRQHandler(){
 }
 
 void ADC_IRQHandler(){
-  LL_ADC_ClearFlag_EOTS(ADC1);
+  LL_ADC_ClearFlag_EOCS(ADC1);
   v=LL_ADC_REG_ReadConversionData10(ADC1);
 }
 
@@ -35,8 +35,8 @@ LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_3);  //
 LL_ADC_REG_SetContinuousMode(ADC1, LL_ADC_REG_CONV_SINGLE);
 LL_ADC_EnableIT_EOCS(ADC1);
 LL_ADC_Enable(ADC1);
-NVIC_EnableIQR(TIM1_UP_TIM10_IRQn);
-NVIC_EnableIQR(ADC_IRQn);
+NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
+NVIC_EnableIRQ(ADC_IRQn);
 
 while(1){
 }
