@@ -16,10 +16,19 @@ static void SystemClock_Config(void);
 static void onLCD();
 static void initADC();
 static int millis = 0;
+static int millis2 = 0;
+static int per;
+
 static inline int sgn(int x);
 
+int avgv;
 int v;
-int last_v = 0;
+int last_v;
+int v1 = 0;
+int v2 = 0;
+int v3 = 0;
+int v4 = 0;
+int v5 = 0;
 int diff;
 int last_diff;
 int t;
@@ -28,17 +37,35 @@ int last_t = 0;
 void TIM1_UP_TIM10_IRQHandler(){
   LL_TIM_ClearFlag_UPDATE(TIM1);
   ++millis;
-  last_diff = diff;
-  diff = v - last_v;
+
   if (!(millis % 240))
      BSP_LCD_Clear(LCD_COLOR_WHITE);
-  BSP_LCD_DrawPixel(millis % 240, y0 - (int)((float)v / 1024 * h), LCD_COLOR_BLACK);
+  BSP_LCD_DrawPixel(millis % 240, y0 - (int)((float)avgv / 1024 * h), LCD_COLOR_BLACK);
+
+  v5 = v4;
+  v4 = v3;
+  v3 = v2;
+  v2 = v1;
+  v1 = v;
+  last_diff = diff;
+  avgv = (v + v1 + v2 + v3 + v4) / 5;
+  last_v = (v1 + v2 + v3 + v4 + v5) / 5;
+  diff = avgv - last_v;
+  if (diff < 0)
+    ++millis2;
+  else {
+    if (millis2 == 0)
+      ;
+    else {
+      per = 2 * millis2;
+      millis2 = 0;
+    }
+  }
   LL_ADC_REG_StartConversionSWStart(ADC1);
 }
 
 void ADC_IRQHandler(){
   LL_ADC_ClearFlag_EOCS(ADC1);
-  last_v = v;
   v=LL_ADC_REG_ReadConversionData10(ADC1);
 }
 
@@ -57,12 +84,14 @@ int main()
    sprintf(str, "time: %d", millis / 1000);
    BSP_LCD_DisplayStringAtLine(2, str);
    //HAL_Delay(100);
-   if ( (sgn(diff) * sgn(last_diff) < 0) && ( abs(diff) > 10 )) {
+   /*
+   if ( (sgn(diff) * sgn(last_diff) < 0)) {
      last_t = t;
      t = millis;
    }
    int per = t - last_t;
    per *= 2;
+   */
    float f = 1000.0 / per;
    sprintf(str, "f: %f", f);
    BSP_LCD_DisplayStringAtLine(12, str);
